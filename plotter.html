@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Data Visualiser</title>
+        <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+    </head>
+    <body onload="loadData();">
+
+        <div class="container">
+            <header>
+                <div class="headerDiv">
+                    <h1 class="mainTitle">Data Visualiser</h1>
+                </div>
+                <div class="headerDiv" style="text-align: right; vertical-align:middle;">
+                    <img src="air.png" style="width:180px;height:60px;"/>
+                    <img src="rgu_logo.png" style="width:250px;height:60px;"/>
+                </div>
+            </header>
+            <div class="content-container">
+                <section>
+                    <p>This page contains a series of parallel coordinate plots which visualise the data from a provided XML file. The similarity values are extracted from the acquired JSON
+                        and each scenario is displayed in its own graph.
+                    </p>
+                </section>
+                <section>
+                    <div id="graphs"></div>
+                </section>
+            </div>
+            <footer> 
+            </footer>
+        </div>
+        
+        <script>
+            function loadData() {
+            
+                //Use a GET request on /scores and execute code on success
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let plotArray = [];
+                    let scenarios = [];
+                    let new_x = [];
+                    let new_y = [];
+
+                    //Extract the names of each feature then add the new global feature
+                    JSON.parse(this.responseText).scenario[0].instance[1].forEach(element => {
+                        new_x.push(element.name);
+                    });
+                    new_x.push("Global")
+
+                    //Determine the number of scenarios to extract
+                    var numScenarios = Object.keys(JSON.parse(this.responseText).scenario).length;
+
+                    //Extract each instance from each scenario
+                    for(let i = 0; i < numScenarios; i++){
+                        for(let j = 1; j < Object.keys(JSON.parse(this.responseText).scenario[i].instance).length; j++){
+                            JSON.parse(this.responseText).scenario[i].instance[j].forEach(element => {
+                                new_y.push(element.similarity.value)
+                            });
+                            new_y=new_y.map(x => parseFloat(x));
+                            new_y.push(new_y.reduce((a,b)=>a+b)*(1/8))
+                            plotArray.push({x:new_x,y:new_y,name:"Neighbour"+''+j});
+                            new_y = []
+                        }
+                        scenarios.push(plotArray);
+                        plotArray = []
+                    }
+
+                    //Create new div for each graph then create the plot
+                    for(let i = 0; i < numScenarios; i++){
+                        let div = document.createElement("div");
+                        div.style.height = "500px";
+                        div.style.width = "100%";
+                        div.style.marginTop = "100px";
+                        div.id = "scenario"+(i+1);
+
+                        var layout = { 
+                            title: {
+                                text:'Scenario' + ' ' + (i+1),
+                                font: {
+                                    family: 'Courier New, monospace',
+                                    size: 24
+                                },
+                                xref: 'paper',
+                                x: 0.05,
+                            },
+                            xaxis: {
+                                title: {
+                                    text: 'Features',
+                                    font: {
+                                        family: 'Courier New, monospace',
+                                        size: 18,
+                                        color: '#7f7f7f'
+                                    }
+                                },
+                                gridcolor: 'black',
+                                gridwidth: 0.6,
+                            },
+                            yaxis: {
+                                title: {
+                                    text: 'Similarity',
+                                    font: {
+                                        family: 'Courier New, monospace',
+                                        size: 18,
+                                        color: '#7f7f7f'
+                                    }
+                                },
+                                gridcolor: '#7f7f7f',
+                                gridwidth: 0.3,
+                            },
+                            legend: {
+                                title: {
+                                    text: 'Neighbour',
+                                    font: {
+                                        family: 'Courier New, monospace',
+                                        size: 15,
+                                        color: '#7f7f7f'
+                                    }
+                                },
+                                bordercolor: "#7f7f7f",
+                                borderwidth: "1",
+                            },
+                        };
+
+                        document.getElementById("graphs").appendChild(div);
+                        Plotly.newPlot( document.getElementById('scenario'+(i+1)), 
+                        scenarios[i], layout );
+                    }
+                }
+            };
+            xhttp.open("GET", "http://127.0.0.1:5000/scores", true);
+            xhttp.send();
+            }
+        </script>
+
+    </body>
+</html>
+
+<style>
+    body {
+        font: 14px Arial,sans-serif; 
+        margin: 0px;
+    }
+    .container {
+        width: 100%;
+        background: #f2f2f2; 
+    }
+    header {
+        padding: 10px 20px;
+        background: #682974;
+        display: flex;
+    }
+    footer {
+        background: #682974;        
+        text-align: center;
+        padding: 5px;
+    }
+    section {
+        width: 100%;
+        padding: 20px;
+    }
+    .mainTitle {
+        color: white;
+    }
+    .content-container {
+        margin: auto;
+        margin-top: 25px;
+        width: 60%;
+    }
+    .headerDiv {
+        height: 100%;
+        width: 50%;
+        flex: 1;
+    }
+</style>
