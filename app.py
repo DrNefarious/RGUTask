@@ -10,17 +10,17 @@ from flask import Flask, jsonify # To create web server API and to create json r
 # There are absolutely simpler ways of doing it, but I wanted to use ElementTree, and became determined to make it work :)
 
 # If the element has non-unique children
-class XmlListConfig(list):
+class XmlListParse(list):
     def __init__(self, element):
         # Iterate though the children of the provided element
         for child in element:
             if len(child):
                 # If children are unique use a dictionary structure
                 if len(child) == 1 or child[0].tag != child[1].tag:
-                    self.append(XmlDictConfig(child))
+                    self.append(XmlDictParse(child))
                 # If children are not unique use a list structure
                 elif child[0].tag == child[1].tag:
-                    self.append(XmlListConfig(child))
+                    self.append(XmlListParse(child))
             # Add any attributes the child element has
             elif child.items():
                 self.append(dict(child.items()))
@@ -31,7 +31,7 @@ class XmlListConfig(list):
                     self.append(text)
 
 # If the element has unique children
-class XmlDictConfig(dict):
+class XmlDictParse(dict):
     def __init__(self, element):
         childrenNames = []
 
@@ -45,10 +45,10 @@ class XmlDictConfig(dict):
             if len(child):
                 # If children are unique use a dictionary structure
                 if len(child) == 1 or child[0].tag != child[1].tag:
-                    tempDict = XmlDictConfig(child)
+                    tempDict = XmlDictParse(child)
                 # If children are not unique use a list structure
                 else:
-                    tempDict = {child[0].tag: XmlListConfig(child)}
+                    tempDict = {child[0].tag: XmlListParse(child)}
                 # Add any attributes the element has
                 if child.items():
                     tempDict.update(dict(child.items()))
@@ -70,7 +70,7 @@ class XmlDictConfig(dict):
 # Main
 tree = ET.parse('cases.xml') # Parse xml file using ElementTree
 root = tree.getroot() # Acquire root element
-xmlData = XmlDictConfig(root) # Create Python dictionary data structure containing the xml data from the ElementTree object
+xmlData = XmlDictParse(root) # Create Python dictionary data structure containing the xml data from the ElementTree object
 
 # Create and configure the flask app
 app = Flask(__name__)
