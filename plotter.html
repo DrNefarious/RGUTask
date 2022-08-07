@@ -5,7 +5,6 @@
         <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
     </head>
     <body onload="loadData();">
-
         <div class="container">
             <header>
                 <div class="headerDiv">
@@ -18,8 +17,10 @@
             </header>
             <div class="content-container">
                 <section>
-                    <p>This page contains a series of parallel coordinate plots which visualise the data from a provided XML file. The similarity values are extracted from the acquired JSON
-                        and each scenario is displayed in its own plot.
+                    <p>This page contains a series of plots which visualise the data from a provided XML file. The similarity values are extracted from the acquired JSON
+                        and each scenario has two plots associated with it. It was unclear if the task specifically required a Parallel Coordinate Plot, or a similar looking
+                        line plot. Each plot shows the 5 instances associated with their respective scenario. A global feature was added to clearly indicate which neighbour
+                        had the highest overall similarity, for the line plot the global feature was normalised so the plot looked better.
                     </p>
                 </section>
                 <section>
@@ -28,6 +29,7 @@
                 </section>
             </div>
             <footer> 
+                <p style="color:white">This page was produced as part of an interview task</p>
             </footer>
         </div>
         
@@ -58,13 +60,15 @@
                     for(let i = 0; i < numScenarios; i++){ //Iterate through each scenario
                         for(let j = 1; j < Object.keys(JSON.parse(this.responseText).scenario[i].instance).length; j++){ //Iterate through each instance
                             JSON.parse(this.responseText).scenario[i].instance[j].forEach(element => { //Iterate through each feature
-                                similarities.push(element.similarity.value); //Create
+                                similarities.push(element.similarity.value); //Create list of similarities
                             });
                             similarities=similarities.map(x => parseFloat(x));  //Making sure that the values are actually floats
-                            similarities.push(similarities.reduce((a,b)=>a+b))  //Normalising the global feature for the line graphs
+                            tempSim = [...similarities]; 
+                            similarities.push(similarities.reduce((a,b)=>a+b));  //Add global similarity feature
+                            tempSim.push(tempSim.reduce((a,b)=>a+b)*(1/8));     //For the line graph the global similarity needs to be normalised
                             plotDataPCP.push(similarities); 
-                            plotDataLine.push({x:featureNames,y:similarities,name:"Neighbour"+''+j, line: {width: 2}}); //Creating the data structure required for line graphs
-                            similarities = []
+                            plotDataLine.push({x:featureNames,y:tempSim,name:"Neighbour"+''+j, line: {width: 2}}); //Creating the data structure required for line graphs
+                            similarities = [];
                         }
                         scenariosLine.push(plotDataLine);
                         scenariosPCP.push(plotDataPCP);
@@ -79,18 +83,20 @@
                             for(let k = 0; k < scenariosPCP[i].length; k++){
                                 similarities.push(scenariosPCP[i][k][j]);
                             }
-                            PCPdimensions.push({range: (j != scenariosPCP[i][0].length-1) ? [0,1] : [0,8], values: similarities, label: featureNames[j]})
-                            similarities = []
+                            PCPdimensions.push({range: (j != scenariosPCP[i][0].length-1) ? [0,1] : [0,8], values: similarities, label: featureNames[j]}); //Give the parcoords a suitable range
+                            similarities = [];
                         }
-                        PCPdimensionsScenarios.push({
+
+                        PCPdimensionsScenarios.push({ //Creating parcoords data structure
                             type: 'parcoords', 
                             pad: [80,80,80,80], 
-                            line:{color: [...Array(scenariosPCP.length).keys()], colorscale: [[0, 'red'], [0.5, 'green'], [1, 'blue']]}, 
+                            line:{color: [...Array(scenariosPCP[0].length).keys()], colorscale: [[0, 'red'], [0.5, 'green'], [1, 'blue']]}, 
                             dimensions: PCPdimensions, 
                             labelangle: 20,
                             labelfont: {size: 12},
-                            labelside: "bottom"})
-                        PCPdimensions = []
+                            labelside: "bottom"});
+                        
+                        PCPdimensions = [];
                     }
 
                     //Create new div for each graph then create the plot
@@ -104,19 +110,19 @@
                         newPCPGraph.id = "scenarioPCP"+(i+1);
 
                         var pcplayout = {
-                        width: 1000,
-                        title: {
-                            text:'Scenario' + ' ' + (i+1) + ' Parallel Coordinate Plot',
-                                font: {
-                                    family: 'Courier New, monospace',
-                                    size: 24
+                            width: 1000,
+                            title: {
+                                text:'Scenario' + ' ' + (i+1) + ' Parallel Coordinate Plot',
+                                    font: {
+                                        family: 'Courier New, monospace',
+                                        size: 24
+                                    },
+                                    xref: 'paper',
+                                    x: 0.05,
                                 },
-                                xref: 'paper',
-                                x: 0.05,
-                            },
-                    };
+                        };
 
-                        var layout = { 
+                        var linelayout = { 
                             width: 1000,
                             title: {
                                 text:'Scenario' + ' ' + (i+1) + ' Line Plot',
@@ -167,7 +173,7 @@
 
                         document.getElementById("graphs").appendChild(newLineGraph);
                         document.getElementById("graphs").appendChild(newPCPGraph);
-                        Plotly.newPlot( document.getElementById('scenarioLine'+(i+1)), scenariosLine[i], layout );
+                        Plotly.newPlot( 'scenarioLine'+(i+1), scenariosLine[i], linelayout );
                         Plotly.newPlot('scenarioPCP'+(i+1), [PCPdimensionsScenarios[i]], pcplayout);
                     }
                 }

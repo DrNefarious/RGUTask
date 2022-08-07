@@ -63,21 +63,21 @@ class XmlDictConfig(dict):
                 else:
                     self.update({child.tag: tempDict})
             elif child.items():
-                self.update({child.tag: dict(child.items())})
+                self.update({child.tag: dict(child.items())}) # Append child attributes
             else:
-                self.update({child.tag: child.text})
+                self.update({child.tag: child.text}) # Append child text
 
 # Main
 tree = ET.parse('cases.xml') # Parse xml file using ElementTree
 root = tree.getroot() # Acquire root element
-xmlData = XmlDictConfig(root) # Create Python dictionary data structure containing the data
+xmlData = XmlDictConfig(root) # Create Python dictionary data structure containing the xml data from the ElementTree object
 
-# create and configure the app
+# Create and configure the flask app
 app = Flask(__name__)
 
 # Create API endpoint /scores, and return Python dictionary containing XML data
 @app.route('/scores', methods=['GET'])
 def scores():
-    response = jsonify(xmlData)
+    response = jsonify(xmlData) # Format data structure as JSON
     response.headers.add('Access-Control-Allow-Origin', '*') # To allow requests from same location
     return response
