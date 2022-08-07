@@ -5,12 +5,16 @@ This Repo was produced as part of a coding task for the job position of Research
 
 The Repo contains two main files: app.py, and plotter.html. There are also two images and an XML document included.
 
-## Installion and Execution ##
-Download and extract the Repo to your computer
-Navigate to the file directory and open a powershell window (or just open the folder in Visual Studio Code)
-Use the command "flask run" to execute the app.py code and start the webserver (Make sure flask is available in your dev environment)
-Open the plotter.html file in your favourite browser (Brave).
-View the lovely plots.
+# Installion and Execution
+1) Download and extract the Repo to your computer.
+
+2) Navigate to the file directory and open a powershell window (or just open the folder in Visual Studio Code).
+
+3) Use the command "flask run" to execute the app.py code and start the webserver (Make sure flask is available in your dev environment).
+
+4) Open the plotter.html file in your favourite browser (Brave).
+
+5) View the lovely plots?
 
 # Specific Task Information
 
