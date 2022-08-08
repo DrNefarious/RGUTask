@@ -17,10 +17,10 @@
             </header>
             <div class="content-container">
                 <section>
-                    <p>This page contains a series of plots which visualise the data from a provided XML file. The similarity values are extracted from the acquired JSON
-                        and each scenario has two plots associated with it. It was unclear if the task specifically required a Parallel Coordinate Plot, or a similar looking
+                    <p>This page contains a series of plots which visualises the data from a provided XML file. The similarity values are extracted from the JSON acquired from
+                        the /scores API and each scenario has two plots associated with it. It was unclear if the task specifically required a Parallel Coordinate Plot, or a similar looking
                         line plot. Each plot shows the 5 instances associated with their respective scenario. A global feature was added to clearly indicate which neighbour
-                        had the highest overall similarity, for the line plot the global feature was normalised so the plot looked better.
+                        had the highest overall similarity, for the line plot the global feature was normalised between 0 and 1 so it looked better.
                     </p>
                 </section>
                 <section>
@@ -42,9 +42,9 @@
                 if (this.readyState == 4 && this.status == 200) {
 
                     //Declare requried variables
-                    let plotDataLine = [], plotDataPCP = [];
-                    let scenariosLine = [], scenariosPCP = [];
-                    let featureNames = [];
+                    let plotDataLine = [], plotDataPCP = [];  //To hold the temporary similarity data
+                    let scenariosLine = [], scenariosPCP = []; //To hold all instance data
+                    let featureNames = []; //Names of all features
                     let similarities = [];
 
                     //Extract the names of each feature then add the new global similarity feature
@@ -63,7 +63,7 @@
                                 similarities.push(element.similarity.value); //Create list of similarities
                             });
                             similarities=similarities.map(x => parseFloat(x));  //Making sure that the values are actually floats
-                            tempSim = [...similarities]; 
+                            tempSim = [...similarities]; //Making a temporary copy to add a different global sim feature to
                             similarities.push(similarities.reduce((a,b)=>a+b));  //Add global similarity feature
                             tempSim.push(tempSim.reduce((a,b)=>a+b)*(1/8));     //For the line graph the global similarity needs to be normalised
                             plotDataPCP.push(similarities); 
@@ -75,7 +75,7 @@
                         plotDataLine = [], plotDataPCP = [];
                     }
 
-                    let PCPdimensions = [], PCPdimensionsScenarios = []; 
+                    let PCPdimensions = [], PCPdimensionsScenarios = []; //For the parallel coordinate plot data structure
 
                     //Creating the data structure required for PCP graphs
                     for(let i = 0; i < scenariosPCP.length; i++){
@@ -90,7 +90,7 @@
                         PCPdimensionsScenarios.push({ //Creating parcoords data structure
                             type: 'parcoords', 
                             pad: [80,80,80,80], 
-                            line:{color: [...Array(scenariosPCP[0].length).keys()], colorscale: [[0, 'red'], [0.5, 'green'], [1, 'blue']]}, 
+                            line:{color: [...Array(scenariosPCP[0].length).keys()], colorscale: [[0, 'red'], [0.5, 'green'], [1, 'blue']]}, //Choosing the number of colours needed
                             dimensions: PCPdimensions, 
                             labelangle: 20,
                             labelfont: {size: 12},
@@ -109,7 +109,7 @@
                         newLineGraph.id = "scenarioLine"+(i+1);
                         newPCPGraph.id = "scenarioPCP"+(i+1);
 
-                        var pcplayout = {
+                        var pcplayout = { //Layout info for Parallel Coordinate Plot
                             width: 1000,
                             title: {
                                 text:'Scenario' + ' ' + (i+1) + ' Parallel Coordinate Plot',
